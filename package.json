@@ -1,0 +1,33 @@
+{
+  "name": "@warerebel/azureblobstoragehelper",
+  "version": "0.0.1",
+  "description": "Module to ease the storing of data in azure gen2 blob storage",
+  "main": "lib/azureBlobStorage.js",
+  "scripts": {
+    "test": "node node_modules/nyc/bin/nyc node_modules/mocha/bin/mocha test/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/warerebel/azureblobstoragehelper.git"
+  },
+  "keywords": [
+    "Azure",
+    "Blob",
+    "Data",
+    "Lake"
+  ],
+  "author": "Chris Lount",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/warerebel/azureblobstoragehelper/issues"
+  },
+  "homepage": "https://github.com/warerebel/azureblobstoragehelper#readme",
+  "dependencies": {
+    "@warerebel/azurerestauth": "^0.2.1"
+  },
+  "devDependencies": {
+    "mocha": "^6.2.0",
+    "nyc": "^14.1.1",
+    "sinon": "^7.4.1"
+  }
+}
