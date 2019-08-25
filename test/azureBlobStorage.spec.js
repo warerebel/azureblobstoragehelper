@@ -14,6 +14,10 @@ describe("It receives a filesystem, a filename and content and stores the conten
         this.request.write = function(){};
     });
 
+    afterEach(function(){
+        sinon.restore();
+    });
+
     beforeEach(function(){
         this.myAzureBlobStorage = new azureBlobStorage("testAccount", "12345");
     });
@@ -37,11 +41,25 @@ describe("It receives a filesystem, a filename and content and stores the conten
         }
 
         let callExecute = async function(){
-            let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
-            assert.deepEqual(result.result, JSON.stringify("Test returned content"));
+            try{
+                let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
+                assert.deepEqual(result.result, JSON.stringify("Test returned content"));
+            }
+            catch(error){
+                assert(false);
+            }
         }.bind(this);
         callExecute();
         response.end();
+    });
+
+    it("Checks for a remote filesystem only once and uses it's cache", async function(){
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").resolves({resonse: {statusCode: 200}, result: "result"});
+        let filesystem = "myfilesystem";
+        await this.myAzureBlobStorage.checkFilesystem("testSystem");
+        assert.deepEqual(executeStub.callCount, 1);
+        await this.myAzureBlobStorage.checkFilesystem("testSystem");
+        assert.deepEqual(executeStub.callCount, 1);
     });
 
 });
