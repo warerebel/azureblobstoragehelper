@@ -22,7 +22,33 @@ describe("It receives a filesystem, a filename and content and stores the conten
         this.myAzureBlobStorage = new azureBlobStorage("testAccount", "12345");
     });
 
-    it("Executes the received options and returns the result", async function(){
+    it("Executes an http call with received options and returns the result", async function(){
+        let content = "Test returned content";
+        let response = new passthrough();
+        response.statusCode = 200;
+        response.write(JSON.stringify(content));
+        this.request.callsArgWith(1, response).returns(this.request);
+
+        let options = {
+            method: "PUT",
+            protocol: "https:",
+            host: "testhost.dfs.core.windows.net",
+            path: "/test?resource=filesystem",
+            headers: {
+                "x-ms-date": new Date().toUTCString(),
+                "x-ms-version": "2019-02-02"
+            }
+        }
+
+        let callExecute = async function(){
+            let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
+            assert.deepEqual(result.result, JSON.stringify("Test returned content"));
+        }.bind(this);
+        callExecute();
+        response.end();
+    });
+
+    it("Executes an http call with received options and returns an error", async function(){
         let content = "Test returned content";
         let response = new passthrough();
         response.statusCode = 200;
@@ -43,14 +69,14 @@ describe("It receives a filesystem, a filename and content and stores the conten
         let callExecute = async function(){
             try{
                 let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
-                assert.deepEqual(result.result, JSON.stringify("Test returned content"));
+                assert(false);
             }
             catch(error){
-                assert(false);
+                assert(true);
             }
         }.bind(this);
         callExecute();
-        response.end();
+        response.emit("error", {message: "error"});
     });
 
     it("Checks for a remote filesystem only once and uses it's cache", async function(){
