@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const sinon = require("sinon");
 const https = require("https");
 const assert = require("assert");
@@ -40,11 +41,11 @@ describe("It receives a filesystem, a filename and content and stores the conten
             }
         };
 
-	this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
-		assert(!error);
-		assert.deepEqual(result.response.statusCode, 200);
-		done();
-	});
+        this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.response.statusCode, 200);
+            done();
+        });
         response.end();
     });
 
@@ -67,63 +68,69 @@ describe("It receives a filesystem, a filename and content and stores the conten
         };
 
         this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, response) => {
-		assert.deepEqual(error.message, "error");
-		done();
-	});
+            assert.deepEqual(error.message, "error");
+            assert(!response);
+            done();
+        });
         response.emit("error", {message: "error"});
     });
 
     it("Checks for a remote filesystem only once and uses it's cache on subsequent checks", function(done){
         let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yieldsRight(null, {statusCode: 200});
         let filesystem = "myfilesystem";
-        this.myAzureBlobStorage.checkFilesystem("testSystem", (error, result) => {
-		assert.deepEqual(executeStub.callCount, 1);
-		this.myAzureBlobStorage.checkFilesystem("testSystem", (error, result) => {
-			assert.deepEqual(executeStub.callCount, 1);
-			done();
-		});
-	});
+        this.myAzureBlobStorage.checkFilesystem(filesystem, (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.statusCode, 200);
+            assert.deepEqual(executeStub.callCount, 1);
+            this.myAzureBlobStorage.checkFilesystem(filesystem, (error, result) => {
+                assert(!error);
+                assert.deepEqual(result.statusCode, 200);
+                assert.deepEqual(executeStub.callCount, 1);
+                done();
+            });
+        });
     });
 
-	it("Creates, writes and flushes a file", function(done){
-		let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-		let filesystem = "myfilesystem";
-		let filename = "myfilename";
-		let content = "mycontent";
-		this.myAzureBlobStorage.createFile(filename, filesystem, content, (error, result) => {
-			assert(!error);
-			assert.deepEqual(executeStub.callCount, 3);
-			done();
-		});
-	});
+    it("Creates, writes and flushes a file", function(done){
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        let filesystem = "myfilesystem";
+        let filename = "myfilename";
+        let content = "mycontent";
+        this.myAzureBlobStorage.createFile(filename, filesystem, content, (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.statusCode, 200);
+            assert.deepEqual(executeStub.callCount, 3);
+            done();
+        });
+    });
 
-	it("Stops file creation when one of the steps fails", function(done){
-		let filesystem = "myfilesystem";
-		let filename = "myfilename";
-		let content = "mycontent";
-		let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest");
-		executeStub.onFirstCall().yields(null, {statusCode: 200});
-		executeStub.onSecondCall().yields(null, {statusCode: 400});
-		this.myAzureBlobStorage.createFile(filename, filesystem, content, (error, result) => {
-			assert(!error);
-			assert.deepEqual(result.statusCode, 400);
-			assert.deepEqual(executeStub.callCount, 2);
-			done();
-		});
-	});
+    it("Stops file creation when one of the steps fails", function(done){
+        let filesystem = "myfilesystem";
+        let filename = "myfilename";
+        let content = "mycontent";
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest");
+        executeStub.onFirstCall().yields(null, {statusCode: 200});
+        executeStub.onSecondCall().yields(null, {statusCode: 400});
+        this.myAzureBlobStorage.createFile(filename, filesystem, content, (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.statusCode, 400);
+            assert.deepEqual(executeStub.callCount, 2);
+            done();
+        });
+    });
 
-	it("Stores a file in blob storage", function(done){
-		let filesystem = "myfilesystem";
-		let filename = "myfilename";
-		let content = "mycontent";
-		let createFileStub = sinon.stub(this.myAzureBlobStorage, "storeFile").yields(null, {statusCode: 200});
-		this.myAzureBlobStorage.storeFile(filename, filesystem, content, (error, result) => {
-			assert.deepEqual(result.statusCode, 200);
-			assert.deepEqual(createFileStub.callCount, 1);
-			assert(!error);
-			done();
-		});
-	});
+    it("Stores a file in blob storage", function(done){
+        let filesystem = "myfilesystem";
+        let filename = "myfilename";
+        let content = "mycontent";
+        let createFileStub = sinon.stub(this.myAzureBlobStorage, "storeFile").yields(null, {statusCode: 200});
+        this.myAzureBlobStorage.storeFile(filename, filesystem, content, (error, result) => {
+            assert.deepEqual(result.statusCode, 200);
+            assert.deepEqual(createFileStub.callCount, 1);
+            assert(!error);
+            done();
+        });
+    });
 
 });
 
