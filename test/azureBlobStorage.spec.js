@@ -123,7 +123,8 @@ describe("It receives a filesystem, a filename and content and stores the conten
         let filesystem = "myfilesystem";
         let filename = "myfilename";
         let content = "mycontent";
-        let createFileStub = sinon.stub(this.myAzureBlobStorage, "storeFile").yields(null, {statusCode: 200});
+        let createFileStub = sinon.stub(this.myAzureBlobStorage, "createFile").yields(null, {statusCode: 200});
+        let checkfileSystemStub = sinon.stub(this.myAzureBlobStorage, "checkFilesystem").yields(null, {statusCode: 200});
         this.myAzureBlobStorage.storeFile(filename, filesystem, content, (error, result) => {
             assert.deepEqual(result.statusCode, 200);
             assert.deepEqual(createFileStub.callCount, 1);
