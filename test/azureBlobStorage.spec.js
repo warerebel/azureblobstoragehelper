@@ -14,7 +14,7 @@ describe("It receives a filesystem, a filename and content and stores the conten
         this.request.write = function(){};
     });
 
-    afterEach(function(){
+    after(function(){
         sinon.restore();
     });
 
@@ -22,7 +22,7 @@ describe("It receives a filesystem, a filename and content and stores the conten
         this.myAzureBlobStorage = new azureBlobStorage("testAccount", "12345");
     });
 
-    it("Executes an http call with received options and returns the result", async function(){
+    it("Executes an http call with received options and returns the result", function(done){
         let content = "Test returned content";
         let response = new passthrough();
         response.statusCode = 200;
@@ -40,15 +40,15 @@ describe("It receives a filesystem, a filename and content and stores the conten
             }
         }
 
-        let callExecute = async function(){
-            let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
-            assert.deepEqual(result.result, JSON.stringify("Test returned content"));
-        }.bind(this);
-        callExecute();
+	this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
+		assert(!error);
+		assert.deepEqual(result.response.statusCode, 200);
+		done();
+	});
         response.end();
     });
 
-    it("Executes an http call with received options and returns an error", async function(){
+    it("Executes an http call with received options and handles an error", function(done){
         let content = "Test returned content";
         let response = new passthrough();
         response.statusCode = 200;
@@ -66,26 +66,24 @@ describe("It receives a filesystem, a filename and content and stores the conten
             }
         }
 
-        let callExecute = async function(){
-            try{
-                let result = await this.myAzureBlobStorage.executeRequest(options, "Test sent content");
-                assert(false);
-            }
-            catch(error){
-                assert(true);
-            }
-        }.bind(this);
-        callExecute();
+        this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, response) => {
+		assert.deepEqual(error.message, "error");
+		done();
+	});
         response.emit("error", {message: "error"});
     });
 
-    it("Checks for a remote filesystem only once and uses it's cache", async function(){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").resolves({resonse: {statusCode: 200}, result: "result"});
+    it("Checks for a remote filesystem only once and uses it's cache", function(done){
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yieldsRight(null, {statusCode: 200});
         let filesystem = "myfilesystem";
-        await this.myAzureBlobStorage.checkFilesystem("testSystem");
-        assert.deepEqual(executeStub.callCount, 1);
-        await this.myAzureBlobStorage.checkFilesystem("testSystem");
-        assert.deepEqual(executeStub.callCount, 1);
+        this.myAzureBlobStorage.checkFilesystem("testSystem", (error, result) => {
+		assert.deepEqual(executeStub.callCount, 1);
+		this.myAzureBlobStorage.checkFilesystem("testSystem", (error, result) => {
+			assert.deepEqual(executeStub.callCount, 1);
+			done();
+		});
+	});
     });
 
 });
+
