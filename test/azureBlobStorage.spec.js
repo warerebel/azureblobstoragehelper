@@ -38,7 +38,7 @@ describe("It receives a filesystem, a filename and content and stores the conten
                 "x-ms-date": new Date().toUTCString(),
                 "x-ms-version": "2019-02-02"
             }
-        }
+        };
 
 	this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
 		assert(!error);
@@ -64,7 +64,7 @@ describe("It receives a filesystem, a filename and content and stores the conten
                 "x-ms-date": new Date().toUTCString(),
                 "x-ms-version": "2019-02-02"
             }
-        }
+        };
 
         this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, response) => {
 		assert.deepEqual(error.message, "error");
