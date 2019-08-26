@@ -43,7 +43,7 @@ describe("It receives a filesystem, a filename and content and stores the conten
 
         this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
             assert(!error);
-            assert.deepEqual(result.response.statusCode, 200);
+            assert.deepEqual(result.statusCode, 200);
             done();
         });
         response.end();
@@ -128,9 +128,25 @@ describe("It receives a filesystem, a filename and content and stores the conten
         this.myAzureBlobStorage.storeFile(filename, filesystem, content, (error, result) => {
             assert.deepEqual(result.statusCode, 200);
             assert.deepEqual(createFileStub.callCount, 1);
+            assert.deepEqual(checkfileSystemStub.callCount, 1);
             assert(!error);
             done();
         });
+    });
+
+    it("handles error flow correctly during requests", function(done){
+        let content = "Test returned content";
+        let response = new passthrough();
+        response.statusCode = 400;
+        response.write(JSON.stringify(content));
+        this.request.callsArgWith(1, response).returns(this.request);
+
+        this.myAzureBlobStorage.createFile("myfilename", "myfilesystem", null, (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.statusCode, 400);
+            done();
+        });
+        response.end();
     });
 
 });
