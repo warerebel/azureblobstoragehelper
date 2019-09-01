@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 const sinon = require("sinon");
 const assert = require("assert");
+const https = require("https");
 const passthrough = require("stream").PassThrough;
 const azureBlobStorage = require("../lib/azureBlobStorage");
 
@@ -8,6 +9,37 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
 
     this.beforeEach(function(){
         this.myAzureBlobStorage = new azureBlobStorage("account", "key");
+    });
+
+    it("Executes an http call with received options and returns the result", function(done){
+        this.callbacks = [];
+        this.request = sinon.stub(https, "request");
+        this.request.on = function(name, callback){this.callbacks[name] = callback;}.bind(this);
+        this.request.end = function(){};
+        this.request.write = function(){};
+        let content = "Test returned content";
+        let response = new passthrough();
+        response.statusCode = 200;
+        response.write(JSON.stringify(content));
+        this.request.callsArgWith(1, response).returns(this.request);
+
+        let options = {
+            method: "PUT",
+            protocol: "https:",
+            host: "testhost.dfs.core.windows.net",
+            path: "/test?resource=filesystem",
+            headers: {
+                "x-ms-date": new Date().toUTCString(),
+                "x-ms-version": "2019-02-02"
+            }
+        };
+
+        this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
+            assert(!error);
+            assert.deepEqual(result.statusCode, 200);
+            done();
+        });
+        response.end();
     });
 
     it("Checks if a filesystem exists and tries to create it if not", function(done){
