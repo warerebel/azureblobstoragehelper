@@ -129,8 +129,8 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         instream.write("Data", "utf8", () => {
             instream.write("Data", "utf8", () => {
                 this.myAzureBlobStorage.writeStream(options, instream,  () => {
-                    assert.deepEqual(executeStub.callCount, 3);
-                    assert.deepEqual(executeStub.args[2][0].path, "/name/myfile.txt?action=flush&position=8");
+                    assert.deepEqual(executeStub.callCount, 2);
+                    assert.deepEqual(executeStub.args[1][0].path, "/name/myfile.txt?action=flush&position=8");
                     done();
                 });
                 instream.end(); 
