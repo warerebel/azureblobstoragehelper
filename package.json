@@ -1,6 +1,6 @@
 {
   "name": "@warerebel/azureblobstoragehelper",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Module to ease the storing of data in azure gen2 blob storage",
   "main": "lib/azureBlobStorage.js",
   "scripts": {
@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.6",
-    "eslint": "^6.2.2",
+    "eslint": "^6.3.0",
     "mocha": "^6.2.0",
     "nyc": "^14.1.1",
-    "sinon": "^7.4.1"
+    "sinon": "^7.4.2"
   }
 }
