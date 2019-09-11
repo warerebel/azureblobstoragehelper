@@ -1,6 +1,6 @@
 {
   "name": "@warerebel/azureblobstoragehelper",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "Module to ease the storing of data in azure gen2 blob storage",
   "main": "lib/azureBlobStorage.js",
   "scripts": {
