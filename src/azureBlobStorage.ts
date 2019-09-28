@@ -92,7 +92,7 @@ export class AzureBlobStorage {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?action=append&position=" , options.position.toString() || "0"),
+            path: "/".concat(options.filesystem, "/", options.filename, "?action=append&position=" , typeof options.position !== "undefined" ? options.position.toString() : "0"),
             headers: options.httpHeaders || {}
         };
         writeFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
