@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/warerebel/azureblobstoragehelper/badge.svg?branch=master)](https://coveralls.io/github/warerebel/azureblobstoragehelper?branch=master)
 <br />
 
-# Intorduction
+# Introduction
 Module to ease the storing of data in azure gen2 blob storage
 
 # Getting Started
