@@ -78,7 +78,7 @@ export class AzureBlobStorage {
             method: "PUT",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?resource=file"),
+            path: "/".concat(options.filesystem, "/", options.filename!, "?resource=file"),
             headers: options.httpHeaders || {}
         };
         createFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
@@ -92,7 +92,7 @@ export class AzureBlobStorage {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?action=append&position=" , typeof options.position !== "undefined" ? options.position.toString() : "0"),
+            path: "/".concat(options.filesystem, "/", options.filename!, "?action=append&position=" , typeof options.position !== "undefined" ? options.position.toString() : "0"),
             headers: options.httpHeaders || {}
         };
         writeFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
@@ -106,7 +106,7 @@ export class AzureBlobStorage {
             method: "HEAD",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename),
+            path: "/".concat(options.filesystem, "/", options.filename!),
             headers: options.httpHeaders || {}
         };
         pathOptions.headers!["x-ms-date"] = new Date().toUTCString();
@@ -120,7 +120,7 @@ export class AzureBlobStorage {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?action=flush&position=", options.position.toString()),
+            path: "/".concat(options.filesystem, "/", options.filename!, "?action=flush&position=", options.position!.toString()),
             headers: options.httpHeaders || {}
         };
         flushOptions.headers!["x-ms-date"] = new Date().toUTCString();
@@ -136,7 +136,7 @@ export class AzureBlobStorage {
             method: "DELETE",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?recursive=", options.recursive.toString()),
+            path: "/".concat(options.filesystem, "/", options.filename!, "?recursive=", options.recursive.toString()),
             headers: options.httpHeaders || {}
         };
         deleteOptions.headers!["x-ms-date"] = new Date().toUTCString();
@@ -189,7 +189,7 @@ export class AzureBlobStorage {
             method: "GET",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename),
+            path: "/".concat(options.filesystem, "/", options.filename!),
             headers: options.httpHeaders || {}
         };
         getStreamOptions.headers!["x-ms-date"] = new Date().toUTCString();
