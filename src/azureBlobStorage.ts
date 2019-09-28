@@ -1,22 +1,41 @@
-const https = require("https");
-const azureSharedKeyAuth = require("@warerebel/azurerestauth");
+import https from "https";
+import http from "http";
+import {AzureSign, HttpOptions} from "@warerebel/azurerestauth";
+import {Readable} from "stream";
 
-class azureStorage {
+export interface StorageOptions {
+    force : boolean,
+    filesystem: string,
+    filename: string,
+    position: number,
+    recursive: boolean,
+    httpHeaders: object,
+    content: any,
+    readChunkSize: number
+}
 
-    constructor(storageAccount, storageSAS) {
+export class AzureBlobStorage {
+
+    storageAccount: string;
+    azureKeyAuth: AzureSign;
+    knownFilesystems: String[];
+
+    constructor(storageAccount: string, storageSAS: string) {
         this.storageAccount = storageAccount;
-        this.azureKeyAuth = new azureSharedKeyAuth(storageAccount, storageSAS);
+        this.azureKeyAuth = new AzureSign(storageAccount, storageSAS);
         this.knownFilesystems = [];
     }
 
-    executeRequest(httpOptions, content, callback) {
+    executeRequest(httpOptions: HttpOptions, content: any, callback: Function): void {
+        if(typeof httpOptions.headers === "undefined")
+            httpOptions.headers = {}
         httpOptions.headers.Authorization = this.azureKeyAuth.getAuthHeaderValue(httpOptions);
-        let request = https.request(httpOptions, (response) => {
-            let returnedContent = "";
-            response.on("error", (error) => {
+        let request = https.request(httpOptions, (response: http.IncomingMessage) => {
+            let returnedContent: string = "";
+            response.on("error", (error: Error) => {
                 callback(error);
             });
-            response.on("data", (chunk) => {
+            response.on("data", (chunk: string) => {
                 returnedContent += chunk;
             });
             response.on("end", () => {
@@ -31,9 +50,9 @@ class azureStorage {
         request.end();
     }
 
-    createFilesystem(options, callback) {
+    createFilesystem(options: StorageOptions, callback: Function): void {
         if (options.force || this.knownFilesystems.indexOf(options.filesystem) < 0) {
-            let httpOptions = {
+            let httpOptions: HttpOptions = {
                 method: "PUT",
                 protocol: "https:",
                 host: this.storageAccount.concat(".dfs.core.windows.net"),
@@ -43,8 +62,8 @@ class azureStorage {
                     "x-ms-version": "2019-02-02"
                 }
             };
-            this.executeRequest(httpOptions, null, (error, response, content) => {
-                if(!error && response.statusCode < 400)
+            this.executeRequest(httpOptions, null, (error: Error, response: http.IncomingMessage, content: any) => {
+                if(!error && response.statusCode! < 400)
                     this.knownFilesystems.push(options.filesystem);
                 callback(error, response, content);
             });
@@ -54,86 +73,86 @@ class azureStorage {
         }
     }
 
-    createFile(options, callback) {
-        let createFileOptions = {
+    createFile(options: StorageOptions, callback: Function): void {
+        let createFileOptions: HttpOptions = {
             method: "PUT",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
             path: "/".concat(options.filesystem, "/", options.filename, "?resource=file"),
             headers: options.httpHeaders || {}
         };
-        createFileOptions.headers["x-ms-date"] = new Date().toUTCString();
-        createFileOptions.headers["x-ms-version"] = "2019-02-02";
-        createFileOptions.headers["Content-Length"] = 0;
+        createFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        createFileOptions.headers!["x-ms-version"] = "2019-02-02";
+        createFileOptions.headers!["Content-Length"] = 0;
         this.executeRequest(createFileOptions, null, callback);
     }
 
-    writeContent(options, callback) {
-        let writeFileOptions = {
+    writeContent(options: StorageOptions, callback: Function): void {
+        let writeFileOptions: HttpOptions = {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?action=append&position=" , options.position || 0),
+            path: "/".concat(options.filesystem, "/", options.filename, "?action=append&position=" , options.position.toString() || "0"),
             headers: options.httpHeaders || {}
         };
-        writeFileOptions.headers["x-ms-date"] = new Date().toUTCString();
-        writeFileOptions.headers["x-ms-version"] = "2019-02-02";
-        writeFileOptions.headers["Content-Length"] = Buffer.byteLength(options.content);
+        writeFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        writeFileOptions.headers!["x-ms-version"] = "2019-02-02";
+        writeFileOptions.headers!["Content-Length"] = Buffer.byteLength(options.content);
         this.executeRequest(writeFileOptions, options.content, callback);
     }
 
-    getPath(options, callback) {
-        let pathOptions = {
+    getPath(options: StorageOptions, callback: Function): void {
+        let pathOptions: HttpOptions = {
             method: "HEAD",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
             path: "/".concat(options.filesystem, "/", options.filename),
             headers: options.httpHeaders || {}
         };
-        pathOptions.headers["x-ms-date"] = new Date().toUTCString();
-        pathOptions.headers["x-ms-version"] = "2019-02-02";
-        pathOptions.headers["Content-Length"] = 0;
+        pathOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        pathOptions.headers!["x-ms-version"] = "2019-02-02";
+        pathOptions.headers!["Content-Length"] = 0;
         this.executeRequest(pathOptions, null, callback);
     }
 
-    flushContent(options, callback) {
-        let flushOptions = {
+    flushContent(options: StorageOptions, callback: Function): void {
+        let flushOptions: HttpOptions = {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?action=flush&position=", options.position),
+            path: "/".concat(options.filesystem, "/", options.filename, "?action=flush&position=", options.position.toString()),
             headers: options.httpHeaders || {}
         };
-        flushOptions.headers["x-ms-date"] = new Date().toUTCString();
-        flushOptions.headers["x-ms-version"] = "2019-02-02";
-        flushOptions.headers["Content-Length"] = 0;
+        flushOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        flushOptions.headers!["x-ms-version"] = "2019-02-02";
+        flushOptions.headers!["Content-Length"] = 0;
         this.executeRequest(flushOptions, null, callback);
     }
 
-    delete(options, callback) {
+    delete(options: StorageOptions, callback: Function): void {
         if(!options.recursive)
             options.recursive = false;
-        let deleteOptions = {
+        let deleteOptions: HttpOptions = {
             method: "DELETE",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename, "?recursive=", options.recursive),
+            path: "/".concat(options.filesystem, "/", options.filename, "?recursive=", options.recursive.toString()),
             headers: options.httpHeaders || {}
         };
-        deleteOptions.headers["x-ms-date"] = new Date().toUTCString();
-        deleteOptions.headers["x-ms-version"] = "2019-02-02";
-        deleteOptions.headers["Content-Length"] = 0;
+        deleteOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        deleteOptions.headers!["x-ms-version"] = "2019-02-02";
+        deleteOptions.headers!["Content-Length"] = 0;
         this.executeRequest(deleteOptions, null, callback);
     }
 
-    writeStream(options, stream, callback){
+    writeStream(options: StorageOptions, stream: Readable, callback: Function): void{
         let currentPosition = 0;
         let currentLength = 0;
         let finished = false;
         let queueLength = 0;
 
         stream.on("readable", () => {
-            let chunk = stream.read(options.readChunk);
+            let chunk = stream.read(options.readChunkSize);
             if(chunk !== null){
                 let chunkLength = Buffer.byteLength(chunk);
                 currentLength += chunkLength;
@@ -141,7 +160,7 @@ class azureStorage {
                 options.position = currentPosition;
                 currentPosition = currentLength;
                 queueLength++;
-                this.writeContent(options, (error, response, content) => {
+                this.writeContent(options, (error: Error, response: http.IncomingMessage, content: any) => {
                     queueLength--;
                     if(error)
                         callback(error, response, content);
@@ -165,25 +184,24 @@ class azureStorage {
         });
     }
 
-    getStream(options, callback){
-        let getStreamOptions = {
+    getStream(options: StorageOptions, callback: Function): void{
+        let getStreamOptions: HttpOptions = {
             method: "GET",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
             path: "/".concat(options.filesystem, "/", options.filename),
             headers: options.httpHeaders || {}
         };
-        getStreamOptions.headers["x-ms-date"] = new Date().toUTCString();
-        getStreamOptions.headers["x-ms-version"] = "2019-02-02";
-        getStreamOptions.headers.Authorization = this.azureKeyAuth.getAuthHeaderValue(getStreamOptions);
-        let request = https.request(getStreamOptions, (response) => {
+        getStreamOptions.headers!["x-ms-date"] = new Date().toUTCString();
+        getStreamOptions.headers!["x-ms-version"] = "2019-02-02";
+        getStreamOptions.headers!.Authorization = this.azureKeyAuth.getAuthHeaderValue(getStreamOptions);
+        let request = https.request(getStreamOptions, (response: http.IncomingMessage) => {
             callback(null, response);
         });
-        request.on("error", (error) => {
+        request.on("error", (error: Error) => {
             callback(error);
         });
         request.end();
     }
 }
 
-module.exports = azureStorage;

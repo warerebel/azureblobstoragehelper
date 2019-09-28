@@ -3,12 +3,12 @@ const sinon = require("sinon");
 const assert = require("assert");
 const https = require("https");
 const passthrough = require("stream").PassThrough;
-const azureBlobStorage = require("../lib/azureBlobStorage");
+const {AzureBlobStorage} = require("../dist/azureBlobStorage");
 
 describe("It provides a convenience wrapper around the Azure blob storage rest api", function(){
 
     this.beforeEach(function(){
-        this.myAzureBlobStorage = new azureBlobStorage("account", "key");
+        this.myAzureBlobStorage = new AzureBlobStorage("account", "key");
     });
 
     it("Executes an http call with received options and returns the result", function(done){
