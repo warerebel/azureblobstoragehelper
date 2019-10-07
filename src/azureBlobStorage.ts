@@ -1,4 +1,4 @@
-import https from "https";
+import {request as httpsRequest, Agent} from "https";
 import http from "http";
 import {AzureSign, HttpOptions} from "@warerebel/azurerestauth";
 import {Readable} from "stream";
@@ -19,18 +19,21 @@ export class AzureBlobStorage {
     storageAccount: string;
     azureKeyAuth: AzureSign;
     knownFilesystems: String[];
+    agent: Agent;
 
     constructor(storageAccount: string, storageSAS: string) {
         this.storageAccount = storageAccount;
         this.azureKeyAuth = new AzureSign(storageAccount, storageSAS);
         this.knownFilesystems = [];
+        this.agent = new Agent({keepAlive: true, maxSockets: 100});
     }
 
     executeRequest(httpOptions: HttpOptions, content: any, callback: Function): void {
         if(typeof httpOptions.headers === "undefined")
             httpOptions.headers = {}
+        httpOptions.agent = this.agent;
         httpOptions.headers.Authorization = this.azureKeyAuth.getAuthHeaderValue(httpOptions);
-        let request = https.request(httpOptions, (response: http.IncomingMessage) => {
+        let request = httpsRequest(httpOptions, (response: http.IncomingMessage) => {
             let returnedContent: string = "";
             response.on("error", (error: Error) => {
                 callback(error);
