@@ -25,7 +25,7 @@ export class AzureBlobStorage {
         this.storageAccount = storageAccount;
         this.azureKeyAuth = new AzureSign(storageAccount, storageSAS);
         this.knownFilesystems = [];
-        this.agent = new Agent({maxSockets: 100, keepAlive: true, maxFreeSockets: 20});
+        this.agent = new Agent({maxSockets: 150, keepAlive: true, maxFreeSockets: 100});
     }
 
     executeRequest(httpOptions: HttpOptions, content: any, callback: Function): void {
