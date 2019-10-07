@@ -6,8 +6,9 @@ after_success: npm run coverage
 deploy:
   skip_cleanup: true
   provider: npm
+  repo: warerebel/azureblobstoragehelper
   email: npm@warerebel.com
   api_key:
     secure: eHUdvdzZ4IfX95F8vlcT+QnICOet0rKSLnrHq4U3XnPSRoJswV8VXMpx1UsbDClEsl0tiUJc8evEvVCgY3KjDPMzQmeJNcLuyTz/SordIb8XNmoQ2cOWW5Ogo1CxOopzBDXGeMggk8AmLPXX+Lqvb9YzS9RTcjfWsJ3ZGS+0b44Ye1ywDEc2YVTKl1BK+fehWVc2OgsXBB6ZO1I/GAaT7wJJ7qcPzKTGPQxQXGojWzZto7sB7HYLcPLmC75xEbDkLgL9cp8g7BYpkPDqshf5tFe5fyfngD/R1HLSyY8IcRrW+6ccF1PxlEWgadK2oT1aQXdp9C6FGcwSnNdfL0sbKWHcEU9RMOqBTNEifDTybNXGUDGLz79BkNYFpH6Os5fi7bfq6zRFHevcNpCoztazPd0DlzJpTinZQkbgUvsJsVe5leNfRWuQXJ+GvNS2P+sUXtOpvbQYcwVuWY11E8pu4Abn4eJPWV7Pb1+IiGHJAwjs0xVrn3iVn2CLsvrGOBiq/g/77XF29vQgwBdhV1Xd/nDT3/gmfRWGMOMG3TcxEp/ac6xVDpQ5Yr3nXlWKXHDQcRo13mXyaxR+5k+a8FjbrKV6DZgrQHsnfyzh5ge1VdTXOxgX2iCEwXSzM5EIJaYarBg/1Vy9dLvW9AmSe5az4QeFrG4W81sQ5LBVcUZzxAo=
   on:
-    repo: warerebel/azureblobstoragehelper
+    branch: master
