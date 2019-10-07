@@ -195,10 +195,11 @@ export class AzureBlobStorage {
             path: "/".concat(options.filesystem, "/", options.filename!),
             headers: options.httpHeaders || {}
         };
+        getStreamOptions.agent = this.agent;
         getStreamOptions.headers!["x-ms-date"] = new Date().toUTCString();
         getStreamOptions.headers!["x-ms-version"] = "2019-02-02";
         getStreamOptions.headers!.Authorization = this.azureKeyAuth.getAuthHeaderValue(getStreamOptions);
-        let request = https.request(getStreamOptions, (response: http.IncomingMessage) => {
+        let request = httpsRequest(getStreamOptions, (response: http.IncomingMessage) => {
             callback(null, response);
         });
         request.on("error", (error: Error) => {
