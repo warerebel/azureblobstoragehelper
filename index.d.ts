@@ -2,14 +2,14 @@ import {AzureSign, HttpOptions} from "@warerebel/azurerestauth";
 import {Readable} from "stream";
 
 export interface StorageOptions {
-    force?: boolean,
-    filesystem: string,
-    filename?: string,
-    position?: number,
-    recursive?: boolean,
-    httpHeaders?: object,
-    content?: any,
-    readChunkSize?: number
+    force?: boolean;
+    filesystem: string;
+    filename?: string;
+    position?: number;
+    recursive?: boolean;
+    httpHeaders?: object;
+    content?: string | Buffer | null;
+    readChunkSize?: number;
 }
 
 export class AzureBlobStorage {

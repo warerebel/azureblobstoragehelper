@@ -4,21 +4,21 @@ import {AzureSign, HttpOptions} from "@warerebel/azurerestauth";
 import {Readable} from "stream";
 
 export interface StorageOptions {
-    force?: boolean,
-    filesystem: string,
-    filename?: string,
-    position?: number,
-    recursive?: boolean,
-    httpHeaders?: object,
-    content?: any,
-    readChunkSize?: number
+    force?: boolean;
+    filesystem: string;
+    filename?: string;
+    position?: number;
+    recursive?: boolean;
+    httpHeaders?: object;
+    content?: string | Buffer | null;
+    readChunkSize?: number;
 }
 
 export class AzureBlobStorage {
 
     storageAccount: string;
     azureKeyAuth: AzureSign;
-    knownFilesystems: String[];
+    knownFilesystems: string[];
     agent: Agent;
 
     constructor(storageAccount: string, storageSAS: string) {
@@ -28,13 +28,13 @@ export class AzureBlobStorage {
         this.agent = new Agent({maxSockets: 150, keepAlive: true, maxFreeSockets: 100});
     }
 
-    executeRequest(httpOptions: HttpOptions, content: any, callback: Function): void {
+    executeRequest(httpOptions: HttpOptions, content: string | Buffer | null, callback: Function): void {
         if(typeof httpOptions.headers === "undefined")
-            httpOptions.headers = {}
+            httpOptions.headers = {};
         httpOptions.agent = this.agent;
         httpOptions.headers.Authorization = this.azureKeyAuth.getAuthHeaderValue(httpOptions);
-        let request = httpsRequest(httpOptions, (response: http.IncomingMessage) => {
-            let returnedContent: string = "";
+        const request = httpsRequest(httpOptions, (response: http.IncomingMessage) => {
+            let returnedContent = "";
             response.on("error", (error: Error) => {
                 callback(error);
             });
@@ -55,7 +55,7 @@ export class AzureBlobStorage {
 
     createFilesystem(options: StorageOptions, callback: Function): void {
         if (options.force || this.knownFilesystems.indexOf(options.filesystem) < 0) {
-            let httpOptions: HttpOptions = {
+            const httpOptions: HttpOptions = {
                 method: "PUT",
                 protocol: "https:",
                 host: this.storageAccount.concat(".dfs.core.windows.net"),
@@ -65,8 +65,8 @@ export class AzureBlobStorage {
                     "x-ms-version": "2019-02-02"
                 }
             };
-            this.executeRequest(httpOptions, null, (error: Error, response: http.IncomingMessage, content: any) => {
-                if(!error && response.statusCode! < 400)
+            this.executeRequest(httpOptions, null, (error: Error, response: http.IncomingMessage, content: string | Buffer | null) => {
+                if(!error && response.statusCode && response.statusCode < 400)
                     this.knownFilesystems.push(options.filesystem);
                 callback(error, response, content);
             });
@@ -77,74 +77,89 @@ export class AzureBlobStorage {
     }
 
     createFile(options: StorageOptions, callback: Function): void {
-        let createFileOptions: HttpOptions = {
+        const createFileOptions: HttpOptions = {
             method: "PUT",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!, "?resource=file"),
+            path: "/".concat(options.filesystem, "/", options.filename || "", "?resource=file"),
             headers: options.httpHeaders || {}
         };
-        createFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        createFileOptions.headers!["x-ms-version"] = "2019-02-02";
-        createFileOptions.headers!["Content-Length"] = 0;
+        if(createFileOptions.headers){
+            createFileOptions.headers["x-ms-date"] = new Date().toUTCString();
+            createFileOptions.headers["x-ms-version"] = "2019-02-02";
+            createFileOptions.headers["Content-Length"] = 0;
+        }
         this.executeRequest(createFileOptions, null, callback);
     }
 
     writeContent(options: StorageOptions, callback: Function): void {
-        let writeFileOptions: HttpOptions = {
+        const writeFileOptions: HttpOptions = {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!, "?action=append&position=" , typeof options.position !== "undefined" ? options.position.toString() : "0"),
+            path: "/".concat(options.filesystem, "/", options.filename || "", "?action=append&position=" , typeof options.position !== "undefined" ? options.position.toString() : "0"),
             headers: options.httpHeaders || {}
         };
-        writeFileOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        writeFileOptions.headers!["x-ms-version"] = "2019-02-02";
-        writeFileOptions.headers!["Content-Length"] = Buffer.byteLength(options.content);
-        this.executeRequest(writeFileOptions, options.content, callback);
+        if(writeFileOptions.headers && options.content){
+            writeFileOptions.headers["x-ms-date"] = new Date().toUTCString();
+            writeFileOptions.headers["x-ms-version"] = "2019-02-02";
+            writeFileOptions.headers["Content-Length"] = Buffer.byteLength(options.content);
+        }
+        if(options.content)
+            this.executeRequest(writeFileOptions, options.content, callback);
+        else
+            callback(new Error("No content provided"));
     }
 
     getPath(options: StorageOptions, callback: Function): void {
-        let pathOptions: HttpOptions = {
+        const pathOptions: HttpOptions = {
             method: "HEAD",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!),
+            path: "/".concat(options.filesystem, "/", options.filename || ""),
             headers: options.httpHeaders || {}
         };
-        pathOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        pathOptions.headers!["x-ms-version"] = "2019-02-02";
-        pathOptions.headers!["Content-Length"] = 0;
+        if(pathOptions.headers){
+            pathOptions.headers["x-ms-date"] = new Date().toUTCString();
+            pathOptions.headers["x-ms-version"] = "2019-02-02";
+            pathOptions.headers["Content-Length"] = 0;
+        }
         this.executeRequest(pathOptions, null, callback);
     }
 
     flushContent(options: StorageOptions, callback: Function): void {
-        let flushOptions: HttpOptions = {
+        if(!options.position)
+            options.position = 0;
+        const flushOptions: HttpOptions = {
             method: "PATCH",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!, "?action=flush&position=", options.position!.toString()),
+            path: "/".concat(options.filesystem, "/", options.filename || "", "?action=flush&position=", options.position.toString()),
             headers: options.httpHeaders || {}
         };
-        flushOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        flushOptions.headers!["x-ms-version"] = "2019-02-02";
-        flushOptions.headers!["Content-Length"] = 0;
+        if(flushOptions.headers){
+            flushOptions.headers["x-ms-date"] = new Date().toUTCString();
+            flushOptions.headers["x-ms-version"] = "2019-02-02";
+            flushOptions.headers["Content-Length"] = 0;
+        }
         this.executeRequest(flushOptions, null, callback);
     }
 
     delete(options: StorageOptions, callback: Function): void {
         if(!options.recursive)
             options.recursive = false;
-        let deleteOptions: HttpOptions = {
+        const deleteOptions: HttpOptions = {
             method: "DELETE",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!, "?recursive=", options.recursive.toString()),
+            path: "/".concat(options.filesystem, "/", options.filename || "", "?recursive=", options.recursive.toString()),
             headers: options.httpHeaders || {}
         };
-        deleteOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        deleteOptions.headers!["x-ms-version"] = "2019-02-02";
-        deleteOptions.headers!["Content-Length"] = 0;
+        if(deleteOptions.headers){
+            deleteOptions.headers["x-ms-date"] = new Date().toUTCString();
+            deleteOptions.headers["x-ms-version"] = "2019-02-02";
+            deleteOptions.headers["Content-Length"] = 0;
+        }
         this.executeRequest(deleteOptions, null, callback);
     }
 
@@ -155,15 +170,15 @@ export class AzureBlobStorage {
         let queueLength = 0;
 
         stream.on("readable", () => {
-            let chunk = stream.read(options.readChunkSize);
+            const chunk = stream.read(options.readChunkSize);
             if(chunk !== null){
-                let chunkLength = Buffer.byteLength(chunk);
+                const chunkLength = Buffer.byteLength(chunk);
                 currentLength += chunkLength;
                 options.content = chunk;
                 options.position = currentPosition;
                 currentPosition = currentLength;
                 queueLength++;
-                this.writeContent(options, (error: Error, response: http.IncomingMessage, content: any) => {
+                this.writeContent(options, (error: Error, response: http.IncomingMessage, content: string | Buffer | null) => {
                     queueLength--;
                     if(error)
                         callback(error, response, content);
@@ -188,18 +203,20 @@ export class AzureBlobStorage {
     }
 
     getStream(options: StorageOptions, callback: Function): void{
-        let getStreamOptions: HttpOptions = {
+        const getStreamOptions: HttpOptions = {
             method: "GET",
             protocol: "https:",
             host: this.storageAccount.concat(".dfs.core.windows.net"),
-            path: "/".concat(options.filesystem, "/", options.filename!),
+            path: "/".concat(options.filesystem, "/", options.filename || ""),
             headers: options.httpHeaders || {}
         };
         getStreamOptions.agent = this.agent;
-        getStreamOptions.headers!["x-ms-date"] = new Date().toUTCString();
-        getStreamOptions.headers!["x-ms-version"] = "2019-02-02";
-        getStreamOptions.headers!.Authorization = this.azureKeyAuth.getAuthHeaderValue(getStreamOptions);
-        let request = httpsRequest(getStreamOptions, (response: http.IncomingMessage) => {
+        if(getStreamOptions.headers){
+            getStreamOptions.headers["x-ms-date"] = new Date().toUTCString();
+            getStreamOptions.headers["x-ms-version"] = "2019-02-02";
+            getStreamOptions.headers.Authorization = this.azureKeyAuth.getAuthHeaderValue(getStreamOptions);
+        }
+        const request = httpsRequest(getStreamOptions, (response: http.IncomingMessage) => {
             callback(null, response);
         });
         request.on("error", (error: Error) => {
