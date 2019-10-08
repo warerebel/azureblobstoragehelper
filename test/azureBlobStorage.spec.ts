@@ -15,6 +15,10 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         this.myAzureBlobStorage = new AzureBlobStorage("account", "key");
     });
 
+    this.afterEach(function(){
+        sinon.restore();
+    });
+
     it("Executes an http call with received options and returns the result", function(done){
         let me = this;
         this.callbacks = {};
@@ -168,6 +172,23 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         
         this.myAzureBlobStorage.flushContent(options, () => {
             Assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            done();
+        });
+    });
+
+    it("returns a stream of blob data", function (done){
+        let executeStub = sinon.stub(https, "request").yields({statusCode: 200});
+        let options = {
+            filesystem: "name",
+            filename: "myfile.txt",
+            "Content-Length": 0
+        };
+        
+        this.myAzureBlobStorage.getStream(options, (error: Error, stream: IncomingMessage) => {
+            Assert(!error);
+            Assert.deepEqual(executeStub.callCount, 1);
+            Assert.deepEqual(error, null);
+            Assert.deepEqual(stream.statusCode, 200);
             done();
         });
     });
