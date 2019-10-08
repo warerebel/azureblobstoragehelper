@@ -1,4 +1,4 @@
-import {AzureSign, HttpOptions} from "@warerebel/azurerestauth";
+import {AzureSign} from "@warerebel/azurerestauth";
 import {Readable} from "stream";
 
 export interface StorageOptions {

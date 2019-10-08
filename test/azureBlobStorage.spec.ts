@@ -5,8 +5,8 @@ import {IncomingMessage} from "http";
 import {PassThrough} from "stream";
 import {AzureBlobStorage} from "../src/azureBlobStorage";
 
-class mockResponse extends PassThrough {
-    statusCode: number = 0;
+class MockResponse extends PassThrough {
+    statusCode = 0;
 }
 
 describe("It provides a convenience wrapper around the Azure blob storage rest api", function(){
@@ -20,19 +20,18 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("Executes an http call with received options and returns the result", function(done){
-        let me = this;
         this.callbacks = {};
         this.request = sinon.stub(https, "request");
-        this.request.on = function(name: string, callback: Function){me.callbacks[name] = callback;};
-        this.request.end = function(){};
-        this.request.write = function(){};
-        let content = "Test returned content";
-        let response = new mockResponse();
+        this.request.on = (name: string, callback: Function): void => {this.callbacks[name] = callback;};
+        this.request.end = function(): void{;};
+        this.request.write = function(): void{;};
+        const content = "Test returned content";
+        const response = new MockResponse();
         response.statusCode = 200;
         response.write(JSON.stringify(content));
         this.request.callsArgWith(1, response).returns(this.request);
 
-        let options = {
+        const options = {
             method: "PUT",
             protocol: "https:",
             host: "testhost.dfs.core.windows.net",
@@ -52,8 +51,8 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("Checks if a filesystem exists and tries to create it if not", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const options = {
             filesystem: "myfs"
         };
         this.myAzureBlobStorage.createFilesystem(options, () => {
@@ -66,16 +65,16 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("creates a file in blob storage", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let timestamp = new Date().toUTCString();
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const timestamp = new Date().toUTCString();
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             httpHeaders: {
                 "Content-Type": "text/plain"
             }
         };
-        let expectedOptions = {
+        const expectedOptions = {
             method: "PUT",
             protocol: "https:",
             host: "account.dfs.core.windows.net",
@@ -95,9 +94,9 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("appends fixed data to a file in blob storage", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let timestamp = new Date().toUTCString();
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const timestamp = new Date().toUTCString();
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             content: "My Content",
@@ -105,7 +104,7 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
                 "Content-Type": "text/plain"
             }
         };
-        let expectedOptions = {
+        const expectedOptions = {
             method: "PATCH",
             protocol: "https:",
             host: "account.dfs.core.windows.net",
@@ -125,9 +124,9 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("pipes data to a blob", function(done){
-        let instream = new PassThrough();
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let options = {
+        const instream = new PassThrough();
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             httpHeaders: {
@@ -147,9 +146,9 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
     
     it("flushes data to a file in blob storage", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let timestamp = new Date().toUTCString();
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const timestamp = new Date().toUTCString();
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             position: 10,
@@ -157,7 +156,7 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
                 "Content-Type": "text/plain"
             }
         };
-        let expectedOptions = {
+        const expectedOptions = {
             method: "PATCH",
             protocol: "https:",
             host: "account.dfs.core.windows.net",
@@ -177,8 +176,8 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("returns a stream of blob data", function (done){
-        let executeStub = sinon.stub(https, "request").yields({statusCode: 200});
-        let options = {
+        const executeStub = sinon.stub(https, "request").yields({statusCode: 200});
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             "Content-Length": 0
@@ -194,13 +193,13 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("Checks if a path exists", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let timestamp = new Date().toUTCString();
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const timestamp = new Date().toUTCString();
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
         };
-        let expectedOptions = {
+        const expectedOptions = {
             method: "HEAD",
             protocol: "https:",
             host: "account.dfs.core.windows.net",
@@ -219,14 +218,14 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("Deletes a file", function(done){
-        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
-        let timestamp = new Date().toUTCString();
-        let options = {
+        const executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        const timestamp = new Date().toUTCString();
+        const options = {
             filesystem: "name",
             filename: "myfile.txt",
             recursive: true
         };
-        let expectedOptions = {
+        const expectedOptions = {
             method: "DELETE",
             protocol: "https:",
             host: "account.dfs.core.windows.net",

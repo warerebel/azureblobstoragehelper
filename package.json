@@ -1,6 +1,6 @@
 {
   "name": "@warerebel/azureblobstoragehelper",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Module to ease the storing of data in azure gen2 blob storage",
   "main": "dist/azureBlobStorage.js",
   "files": [
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "node node_modules/typescript/bin/tsc",
     "test": "node node_modules/nyc/bin/nyc node_modules/mocha/bin/mocha",
-    "lint": "node node_modules/eslint/bin/eslint src/**/*.ts",
+    "lint": "node node_modules/eslint/bin/eslint **/*.ts",
     "coverage": "node node_modules/nyc/bin/nyc report --reporter=text-lcov | node_modules/coveralls/bin/coveralls.js"
   },
   "nyc": {
