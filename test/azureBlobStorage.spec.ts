@@ -193,5 +193,30 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         });
     });
 
+    it("Checks if a path exists", function(done){
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        let timestamp = new Date().toUTCString();
+        let options = {
+            filesystem: "name",
+            filename: "myfile.txt",
+        };
+        let expectedOptions = {
+            method: "HEAD",
+            protocol: "https:",
+            host: "account.dfs.core.windows.net",
+            path: "/name/myfile.txt",
+            headers: {
+                "x-ms-date": timestamp,
+                "x-ms-version": "2019-02-02",
+                "Content-Length": 0
+            }
+        };
+        
+        this.myAzureBlobStorage.getPath(options, () => {
+            Assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            done();
+        });
+    });
+
 });
 
