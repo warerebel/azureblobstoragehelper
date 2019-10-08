@@ -5,7 +5,7 @@ import {IncomingMessage} from "http";
 import {PassThrough} from "stream";
 import {AzureBlobStorage} from "../src/azureBlobStorage";
 
-class mockRequest extends PassThrough {
+class mockResponse extends PassThrough {
     statusCode: number = 0;
 }
 
@@ -23,7 +23,7 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         this.request.end = function(){};
         this.request.write = function(){};
         let content = "Test returned content";
-        let response = new mockRequest();
+        let response = new mockResponse();
         response.statusCode = 200;
         response.write(JSON.stringify(content));
         this.request.callsArgWith(1, response).returns(this.request);
