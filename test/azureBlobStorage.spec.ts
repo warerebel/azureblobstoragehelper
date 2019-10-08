@@ -218,5 +218,36 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         });
     });
 
+    it("Deletes a file", function(done){
+        let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
+        let timestamp = new Date().toUTCString();
+        let options = {
+            filesystem: "name",
+            filename: "myfile.txt",
+            recursive: true
+        };
+        let expectedOptions = {
+            method: "DELETE",
+            protocol: "https:",
+            host: "account.dfs.core.windows.net",
+            path: "/name/myfile.txt?recursive=true",
+            headers: {
+                "x-ms-date": timestamp,
+                "x-ms-version": "2019-02-02",
+                "Content-Length": 0
+            }
+        };
+        
+        this.myAzureBlobStorage.delete(options, () => {
+            Assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            options.recursive = false;
+            expectedOptions.path =  "/name/myfile.txt?recursive=false";
+            this.myAzureBlobStorage.delete(options, () => {
+                Assert.deepEqual(executeStub.args[1][0], expectedOptions);
+                done();
+            });
+        });
+    });
+
 });
 
