@@ -1,9 +1,13 @@
-/* eslint-disable no-undef */
-const sinon = require("sinon");
-const assert = require("assert");
-const https = require("https");
-const passthrough = require("stream").PassThrough;
-const {AzureBlobStorage} = require("../dist/azureBlobStorage");
+import sinon from "sinon";
+import Assert from "assert";
+import https from "https";
+import {IncomingMessage} from "http";
+import {PassThrough} from "stream";
+import {AzureBlobStorage} from "../src/azureBlobStorage";
+
+class mockRequest extends PassThrough {
+    statusCode: number = 0;
+}
 
 describe("It provides a convenience wrapper around the Azure blob storage rest api", function(){
 
@@ -12,13 +16,14 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
     });
 
     it("Executes an http call with received options and returns the result", function(done){
-        this.callbacks = [];
+        let me = this;
+        this.callbacks = {};
         this.request = sinon.stub(https, "request");
-        this.request.on = function(name, callback){this.callbacks[name] = callback;}.bind(this);
+        this.request.on = function(name: string, callback: Function){me.callbacks[name] = callback;};
         this.request.end = function(){};
         this.request.write = function(){};
         let content = "Test returned content";
-        let response = new passthrough();
+        let response = new mockRequest();
         response.statusCode = 200;
         response.write(JSON.stringify(content));
         this.request.callsArgWith(1, response).returns(this.request);
@@ -34,9 +39,9 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
             }
         };
 
-        this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error, result) => {
-            assert(!error);
-            assert.deepEqual(result.statusCode, 200);
+        this.myAzureBlobStorage.executeRequest(options, "Test sent content", (error: Error, result: IncomingMessage) => {
+            Assert(!error);
+            Assert.deepEqual(result.statusCode, 200);
             done();
         });
         response.end();
@@ -48,9 +53,9 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
             filesystem: "myfs"
         };
         this.myAzureBlobStorage.createFilesystem(options, () => {
-            assert.deepEqual(executeStub.callCount, 1);
+            Assert.deepEqual(executeStub.callCount, 1);
             this.myAzureBlobStorage.createFilesystem(options, () => {
-                assert.deepEqual(executeStub.callCount, 1);
+                Assert.deepEqual(executeStub.callCount, 1);
                 done();
             });
         });
@@ -80,7 +85,7 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         };
         
         this.myAzureBlobStorage.createFile(options, () => {
-            assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            Assert.deepEqual(executeStub.args[0][0], expectedOptions);
             done();
         });
     });
@@ -110,27 +115,26 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         };
         
         this.myAzureBlobStorage.writeContent(options, () => {
-            assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            Assert.deepEqual(executeStub.args[0][0], expectedOptions);
             done();
         });
     });
 
     it("pipes data to a blob", function(done){
-        let instream = new passthrough();
+        let instream = new PassThrough();
         let executeStub = sinon.stub(this.myAzureBlobStorage, "executeRequest").yields(null, {statusCode: 200});
         let options = {
-            filesystem: "name", // Required - must be lower case
-            filename: "myfile.txt", // Required
+            filesystem: "name",
+            filename: "myfile.txt",
             httpHeaders: {
-                // Any custom http headers to set - optional and can be omitted
                 "Content-Type": "text/plain"
             }
         };
         instream.write("Data", "utf8", () => {
             instream.write("Data", "utf8", () => {
                 this.myAzureBlobStorage.writeStream(options, instream,  () => {
-                    assert.deepEqual(executeStub.callCount, 2);
-                    assert.deepEqual(executeStub.args[1][0].path, "/name/myfile.txt?action=flush&position=8");
+                    Assert.deepEqual(executeStub.callCount, 2);
+                    Assert.deepEqual(executeStub.args[1][0].path, "/name/myfile.txt?action=flush&position=8");
                     done();
                 });
                 instream.end(); 
@@ -163,7 +167,7 @@ describe("It provides a convenience wrapper around the Azure blob storage rest a
         };
         
         this.myAzureBlobStorage.flushContent(options, () => {
-            assert.deepEqual(executeStub.args[0][0], expectedOptions);
+            Assert.deepEqual(executeStub.args[0][0], expectedOptions);
             done();
         });
     });

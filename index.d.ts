@@ -15,7 +15,6 @@ export interface StorageOptions {
 export class AzureBlobStorage {
     storageAccount: string;
     azureKeyAuth: AzureSign;
-    knownFilesystems: String[];
 
     constructor(storageAccount: string, storageSAS: string);
 
