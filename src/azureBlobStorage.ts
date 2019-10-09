@@ -9,7 +9,7 @@ export interface StorageOptions {
     filename?: string;
     position?: number;
     recursive?: boolean;
-    httpHeaders?: object;
+    httpHeaders?: {[index: string]: string | number};
     content?: string | Buffer | null;
     readChunkSize?: number;
 }
